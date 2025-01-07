@@ -11,7 +11,6 @@ class ActiveInferenceAgent:
         self.goal = goal
         self.height, self.width = grid.shape
         
-        # Initialize beliefs and parameters
         self.belief_states = np.zeros_like(grid)
         self.belief_states[start[0], start[1]] = 1.0
         self.actions = [(-1, 0), (0, 1), (1, 0), (0, -1)]  # up, right, down, left
@@ -20,13 +19,11 @@ class ActiveInferenceAgent:
         self.full_path_history = [] 
         
     def update_beliefs(self, pos: Tuple[int, int]):
-        """Update belief states based on current position."""
         self.belief_states *= 0.95
         self.belief_states[pos[0], pos[1]] += 0.05
         self.belief_states /= np.sum(self.belief_states)
         
     def find_path(self) -> List[Tuple[int, int]]:
-        """Find path using active inference."""
         current = self.start
         path = [current]
         visited = {current}
@@ -41,13 +38,13 @@ class ActiveInferenceAgent:
             # Evaluate possible actions
             for dx, dy in self.actions:
                 x, y = current[0] + dx, current[1] + dy
-                if (0 <= x < self.height and 0 <= y < self.width and 
-                    self.grid[x, y] != 1 and (x, y) not in visited):
+                if (0 <= x < self.height and 0 <= y < self.width
+                    and self.grid[x, y] != 1 and (x, y) not in visited):
                     
-                    # Compute free energy (distance to goal + terrain cost)
-                    energy = (abs(x - self.goal[0]) + abs(y - self.goal[1]) + 
-                            self.grid[x, y] 
-                            - self.temperature * np.log(self.belief_states[x, y] + 1e-10))
+                    dist = abs(x - self.goal[0]) + abs(y - self.goal[1])
+                    cost = self.grid[x, y]
+                    log_belief = np.log(self.belief_states[x, y] + 1e-10)
+                    energy = dist + cost - self.temperature * log_belief
                     
                     if energy < best_energy:
                         best_energy = energy
@@ -107,15 +104,12 @@ class Visualizer:
             path_x, path_y = zip(*full_path)
 
             for ax in [self.ax1, self.ax2]:
-                # Plot the full path (including backtracking)
                 full_line, = ax.plot(path_y, path_x, 'r.-', linewidth=1, markersize=5)
                 self.path_artists.append(full_line)
 
-                # Plot current position
                 point, = ax.plot(path_y[-1], path_x[-1], 'go', markersize=12)
                 self.path_artists.append(point)
 
-                # Plot start and goal
                 start, = ax.plot(self.agent.start[1], self.agent.start[0], 'b*', markersize=12)
                 goal, = ax.plot(self.agent.goal[1], self.agent.goal[0], 'r*', markersize=12)
                 self.path_artists.extend([start, goal])
@@ -124,13 +118,17 @@ class Visualizer:
     
     def animate_path(self):
         """Animate the pathfinding process."""
-        anim = FuncAnimation(self.fig, self.update_frame, frames=len(self.agent.full_path_history),
-                           interval=50, blit=True, repeat=False)
+        anim = FuncAnimation(self.fig, 
+                             self.update_frame, 
+                             frames=len(self.agent.full_path_history),
+                            interval=50, 
+                            blit=True, 
+                            repeat=False)
         plt.show()
 
 def main():
     size = 21
-    maze_gen = PrimsMaze(size, size, seed=4)
+    maze_gen = PrimsMaze(size, size, seed=421)
     grid = maze_gen.generate()
     agent = ActiveInferenceAgent(grid, start=(1, 1), goal=(size-2, size-2))
     path = agent.find_path()
