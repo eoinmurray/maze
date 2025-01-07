@@ -46,8 +46,8 @@ class ActiveInferenceAgent:
                     
                     # Compute free energy (distance to goal + terrain cost)
                     energy = (abs(x - self.goal[0]) + abs(y - self.goal[1]) + 
-                            self.grid[x, y] - self.temperature * 
-                            np.log(self.belief_states[x, y] + 1e-10))
+                            self.grid[x, y] 
+                            - self.temperature * np.log(self.belief_states[x, y] + 1e-10))
                     
                     if energy < best_energy:
                         best_energy = energy
