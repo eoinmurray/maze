@@ -24,7 +24,6 @@ class ActiveInferenceAgent:
         self.belief_states *= 0.95
         self.belief_states[pos[0], pos[1]] += 0.05
         self.belief_states /= np.sum(self.belief_states)
-        self.belief_history.append(self.belief_states.copy())
         
     def find_path(self) -> List[Tuple[int, int]]:
         """Find path using active inference."""
@@ -33,6 +32,7 @@ class ActiveInferenceAgent:
         visited = {current}
         
         self.full_path_history.append(current)
+        self.belief_history.append(self.belief_states.copy())
         
         while current != self.goal:
             best_energy = float('inf')
@@ -66,6 +66,7 @@ class ActiveInferenceAgent:
                 self.temperature *= 0.995
                 
             self.full_path_history.append(current)
+            self.belief_history.append(self.belief_states.copy())
 
         return path
 
@@ -124,13 +125,14 @@ class Visualizer:
     def animate_path(self):
         """Animate the pathfinding process."""
         anim = FuncAnimation(self.fig, self.update_frame, frames=len(self.agent.full_path_history),
-                           interval=500, blit=True, repeat=False)
+                           interval=50, blit=True, repeat=False)
         plt.show()
 
 def main():
-    maze_gen = PrimsMaze(9, 9, seed=42)
+    size = 21
+    maze_gen = PrimsMaze(size, size, seed=4)
     grid = maze_gen.generate()
-    agent = ActiveInferenceAgent(grid, start=(1, 1), goal=(7, 7))
+    agent = ActiveInferenceAgent(grid, start=(1, 1), goal=(size-2, size-2))
     path = agent.find_path()
     
     viz = Visualizer(agent)
